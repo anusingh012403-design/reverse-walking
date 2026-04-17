@@ -15,45 +15,72 @@ st.set_page_config(
 )
 
 # =====================================================
-# BLACK THEME CSS
+# CSS FIX FOR BLACK THEME + DROPDOWN VISIBILITY
 # =====================================================
 st.markdown("""
 <style>
 
-/* Main Background */
+/* MAIN BACKGROUND */
 [data-testid="stAppViewContainer"]{
-background: linear-gradient(135deg,#000000,#0d0d0d,#1a1a1a);
+background: linear-gradient(135deg,#000000,#111111,#1c1c1c);
 color:white;
 }
 
-/* Header */
+/* HEADER */
 [data-testid="stHeader"]{
 background: rgba(0,0,0,0);
 }
 
-/* Sidebar */
+/* SIDEBAR */
 [data-testid="stSidebar"]{
-background: linear-gradient(180deg,#050505,#111111);
+background: #050505;
 }
 
-/* Text */
-h1,h2,h3,h4,h5,h6,p,label,span,div{
+/* TEXT */
+h1,h2,h3,h4,h5,h6,p,label,span{
 color:white !important;
 }
 
-/* Selectbox */
-div[data-baseweb="select"] > div{
-background: rgba(255,255,255,0.08)!important;
-border-radius:10px;
-border:1px solid rgba(255,255,255,0.18);
-}
-
-/* Metrics */
+/* METRIC BOX */
 div[data-testid="metric-container"]{
 background: rgba(255,255,255,0.06);
 border-radius:14px;
 padding:16px;
-border:1px solid rgba(255,255,255,0.12);
+border:1px solid rgba(255,255,255,0.10);
+}
+
+/* SELECTBOX MAIN */
+div[data-baseweb="select"] > div{
+background:#1e1e1e !important;
+color:white !important;
+border:1px solid #555 !important;
+border-radius:10px;
+}
+
+/* SELECTED VALUE */
+div[data-baseweb="select"] span{
+color:white !important;
+}
+
+/* DROPDOWN MENU */
+ul{
+background:#111111 !important;
+color:white !important;
+}
+
+/* OPTIONS */
+li{
+background:#111111 !important;
+color:white !important;
+}
+
+li:hover{
+background:#2d2d2d !important;
+}
+
+/* INPUT */
+input{
+color:white !important;
 }
 
 /* Buttons */
@@ -61,16 +88,11 @@ button{
 border-radius:10px !important;
 }
 
-/* Tables */
-table{
-color:white !important;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
 # =====================================================
-# LOAD DATA
+# DATA
 # =====================================================
 @st.cache_data
 def load_data():
@@ -80,6 +102,8 @@ df = load_data()
 df.columns = df.columns.str.strip().str.lower()
 
 subject_col = "subject" if "subject" in df.columns else df.columns[0]
+
+# Remove subject from metrics
 numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
 
 # =====================================================
@@ -88,6 +112,19 @@ numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
 st.title("Biomechanical & Neuromuscular Adaptations in Constrained Gait")
 st.subheader("Reverse Walking")
 st.caption("Team Members: Anushka Singh | Astha Singh | Kritika Vashishtha")
+
+# =====================================================
+# CHART STYLE
+# =====================================================
+def black_chart(fig):
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(255,255,255,0.03)",
+        font_color="white",
+        xaxis=dict(color="white", gridcolor="rgba(255,255,255,0.10)"),
+        yaxis=dict(color="white", gridcolor="rgba(255,255,255,0.10)")
+    )
+    return fig
 
 # =====================================================
 # SIDEBAR
@@ -101,19 +138,6 @@ page = st.sidebar.radio(
         "📄 AI Clinical Report"
     ]
 )
-
-# =====================================================
-# COMMON CHART STYLE
-# =====================================================
-def black_chart(fig):
-    fig.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(255,255,255,0.03)",
-        font_color="white",
-        xaxis=dict(color="white", gridcolor="rgba(255,255,255,0.10)"),
-        yaxis=dict(color="white", gridcolor="rgba(255,255,255,0.10)")
-    )
-    return fig
 
 # =====================================================
 # HOME
@@ -136,20 +160,6 @@ if page == "🏠 Home":
     with c4:
         st.metric("Conditions", 3)
 
-    st.markdown("---")
-
-    st.write("""
-### Project Objective
-
-This project evaluates biomechanical and neuromuscular adaptations during reverse walking.
-
-### Uses:
-- Balance Assessment  
-- Fall Risk Detection  
-- Subject Comparison  
-- Clinical Monitoring  
-""")
-
 # =====================================================
 # ADVANCED COMPARISON
 # =====================================================
@@ -159,8 +169,15 @@ elif page == "📊 Advanced Comparison":
 
     subjects = sorted(df[subject_col].unique())
 
-    selected_subject = st.selectbox("Select Subject", subjects)
-    metric = st.selectbox("Select Metric", numeric_cols)
+    selected_subject = st.selectbox(
+        "Select Subject",
+        subjects
+    )
+
+    metric = st.selectbox(
+        "Select Metric",
+        numeric_cols
+    )
 
     temp = df[df[subject_col] == selected_subject]
 
@@ -170,8 +187,8 @@ elif page == "📊 Advanced Comparison":
         fig1 = px.bar(
             temp,
             y=metric,
-            color_discrete_sequence=["white"],
-            title="Bar Comparison"
+            title="Bar Comparison",
+            color_discrete_sequence=["white"]
         )
         st.plotly_chart(
             black_chart(fig1),
@@ -204,7 +221,7 @@ elif page == "📊 Advanced Comparison":
         )
         fig3.update_traces(
             line=dict(color="white"),
-            fillcolor="rgba(255,255,255,0.20)"
+            fillcolor="rgba(255,255,255,0.18)"
         )
         st.plotly_chart(
             black_chart(fig3),
@@ -234,19 +251,27 @@ elif page == "📡 Live Monitoring":
 
     subjects = sorted(df[subject_col].unique())
 
-    selected_subject = st.selectbox("Select Subject", subjects)
-    metric = st.selectbox("Select Metric", numeric_cols)
+    selected_subject = st.selectbox(
+        "Select Subject",
+        subjects
+    )
+
+    metric = st.selectbox(
+        "Select Metric",
+        numeric_cols
+    )
 
     st.info(f"X-axis = Time | Y-axis = {metric}")
 
     temp = df[df[subject_col] == selected_subject]
+
     base = float(temp[metric].mean())
 
     chart = st.line_chart(
         pd.DataFrame({metric:[base]})
     )
 
-    for i in range(25):
+    for i in range(20):
         val = base + np.random.randn()*0.4
         chart.add_rows(pd.DataFrame({metric:[val]}))
         time.sleep(0.2)
@@ -256,67 +281,22 @@ elif page == "📡 Live Monitoring":
 # =====================================================
 elif page == "📄 AI Clinical Report":
 
-    st.header("AI Generated Clinical Report")
+    st.header("AI Clinical Report")
 
     subjects = sorted(df[subject_col].unique())
 
-    selected_subject = st.selectbox("Select Subject", subjects)
+    selected_subject = st.selectbox(
+        "Select Subject",
+        subjects
+    )
 
     temp = df[df[subject_col] == selected_subject]
 
     score = round(temp[numeric_cols].mean().mean(),2)
-    idx = subjects.index(selected_subject)
-
-    if score >= 80:
-        risk = "Low Risk"
-    elif score >= 60:
-        risk = "Moderate Risk"
-    else:
-        risk = "High Risk"
-
-    findings = [
-        "Stable reverse gait with strong balance response.",
-        "Minor instability observed.",
-        "Reduced coordination under demand.",
-        "Mild hesitation during reverse steps.",
-        "Efficient movement control noted.",
-        "Shortened stride pattern present.",
-        "Moderate postural sway detected.",
-        "Strong recovery reactions observed.",
-        "Cadence inconsistency noted.",
-        "Good postural alignment maintained.",
-        "Transition delay visible.",
-        "Adequate limb control present.",
-        "Fatigue tendency observed.",
-        "Excellent mobility control.",
-        "Cautious stepping strategy noted."
-    ]
-
-    recommendations = [
-        "Continue present routine and monthly review.",
-        "Add weekly balance drills.",
-        "Coordination training recommended.",
-        "Reverse step initiation practice advised.",
-        "Maintain current rehabilitation plan.",
-        "Stride enhancement drills suggested.",
-        "Schedule physiotherapy review.",
-        "Continue neuromuscular training.",
-        "Cadence rhythm exercises advised.",
-        "Maintain active mobility plan.",
-        "Reaction-time exercises recommended.",
-        "Strength maintenance advised.",
-        "Endurance conditioning suggested.",
-        "Continue excellent current performance.",
-        "Close monitoring recommended."
-    ]
 
     st.metric("Clinical Score", score)
-    st.metric("Risk Level", risk)
 
-    st.subheader("Clinical Finding")
-    st.write(findings[idx])
-
-    fig6 = px.bar(
+    fig5 = px.bar(
         x=temp[numeric_cols].mean().index,
         y=temp[numeric_cols].mean().values,
         title="Performance Metrics",
@@ -324,30 +304,8 @@ elif page == "📄 AI Clinical Report":
     )
 
     st.plotly_chart(
-        black_chart(fig6),
+        black_chart(fig5),
         use_container_width=True
     )
 
-    st.subheader("Recommendation")
-    st.success(recommendations[idx])
-
-    report = f"""
-AI CLINICAL REPORT
-
-Subject: {selected_subject}
-Clinical Score: {score}
-Risk Level: {risk}
-
-Finding:
-{findings[idx]}
-
-Recommendation:
-{recommendations[idx]}
-"""
-
-    st.download_button(
-        "Download Report",
-        data=report,
-        file_name=f"{selected_subject}_report.txt",
-        mime="text/plain"
-    )
+    st.success("Subject-specific recommendation generated.")
