@@ -9,60 +9,63 @@ import time
 # PAGE CONFIG
 # =====================================================
 st.set_page_config(
-    page_title="Reverse Walking Dashboard",
+    page_title="Constrained Gait Dashboard",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # =====================================================
-# PROFESSIONAL CLINICAL CSS
+# CUSTOM CSS
 # =====================================================
 st.markdown("""
 <style>
-/* Main App Background */
-.stApp {
-    background: linear-gradient(135deg,#0f172a,#1e3a8a,#0ea5e9);
+html, body, [data-testid="stAppViewContainer"] {
+    background: linear-gradient(135deg,#081b6b,#0b4fd9,#1da1f2);
+    color: white;
 }
 
-/* Main content area */
+/* Main container */
 .block-container {
     padding-top: 1rem;
-    padding-bottom: 2rem;
-}
-
-/* Text colors */
-h1,h2,h3,h4,h5,h6,p,label,span,div {
-    color: white !important;
-}
-
-/* Metric Cards */
-div[data-testid="metric-container"] {
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.18);
-    border-radius: 16px;
-    padding: 18px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.18);
 }
 
 /* Sidebar */
-section[data-testid="stSidebar"] {
-    background: #0f172a;
+[data-testid="stSidebar"] {
+    background: rgba(0,0,0,0.15);
+}
+
+/* Text */
+h1,h2,h3,h4,h5,p,label,span {
+    color: white !important;
+}
+
+/* Selectbox */
+div[data-baseweb="select"] > div {
+    background-color: rgba(255,255,255,0.12) !important;
+    color: white !important;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 10px;
+}
+
+/* Dropdown text */
+div[data-baseweb="select"] * {
+    color: white !important;
+}
+
+/* Metric cards */
+div[data-testid="metric-container"] {
+    background: rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 18px;
+    border: 1px solid rgba(255,255,255,0.18);
 }
 
 /* Buttons */
 .stButton>button {
-    border-radius: 10px;
-    border: none;
-}
-
-/* Dataframe */
-[data-testid="stDataFrame"] {
-    background: white;
-}
-
-/* Selectbox */
-div[data-baseweb="select"] {
-    color: black !important;
+    background:#ffffff22;
+    color:white;
+    border-radius:10px;
+    border:1px solid #ffffff33;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -83,37 +86,37 @@ numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
 # =====================================================
 # HEADER
 # =====================================================
-st.title("Biomechanical and Neuromuscular Adaptations in Constrained Gait")
+st.title("Constrained Gait")
 st.subheader('"Reverse Walking"')
-st.caption("Minor Project Dashboard | Team: Anushka Singh | Astha Singh | Kratika Vashishtha")
+st.caption("Minor Project Dashboard")
 
 # =====================================================
-# SIDEBAR NAVIGATION WITH LOGOS
+# SIDEBAR
 # =====================================================
 page = st.sidebar.radio(
-    "Navigation",
+    "Select Module",
     [
-        "🏠 Home",
-        "📊 Comparison Analysis",
-        "📈 Live Monitoring",
-        "📋 Clinical Report"
+        "Home",
+        "Advanced Subject Comparison",
+        "Live Monitoring",
+        "Clinical Report"
     ]
 )
 
 # =====================================================
-# HOME PAGE
+# HOME
 # =====================================================
-if page == "🏠 Home":
+if page == "Home":
 
-    st.header("Professional Dashboard Overview")
+    st.header("Dashboard Overview")
 
     c1, c2, c3, c4 = st.columns(4)
 
     with c1:
-        st.metric("Total Subjects", df[subject_col].nunique())
+        st.metric("Subjects", df[subject_col].nunique())
 
     with c2:
-        st.metric("Total Records", len(df))
+        st.metric("Records", len(df))
 
     with c3:
         st.metric("Features", len(numeric_cols))
@@ -123,51 +126,19 @@ if page == "🏠 Home":
 
     st.markdown("---")
 
-    left, right = st.columns([1.2,1])
-
-    with left:
-
-        st.subheader("Project Objective")
-
-        st.write("""
-This project analyzes biomechanical and neuromuscular adaptations during reverse walking.
-
-### Key Clinical Areas:
-- Balance Stability
-- Cadence Response
-- Motor Coordination
-- Functional Mobility
-- Fall Risk Screening
-- Performance Tracking
+    st.write("""
+### Clinical Uses
+- Reverse walking assessment  
+- Balance monitoring  
+- Fall risk detection  
+- Subject comparison  
+- Clinical reporting  
 """)
 
-        st.progress(90)
-        st.success("System Ready for Demonstration")
-
-    with right:
-
-        if "condition" in df.columns:
-
-            fig = px.pie(
-                df,
-                names="condition",
-                hole=0.55,
-                title="Walking Conditions Distribution",
-                color_discrete_sequence=["#38bdf8","#60a5fa","#2563eb"]
-            )
-
-            fig.update_layout(
-                paper_bgcolor="rgba(0,0,0,0)",
-                font_color="white",
-                height=400
-            )
-
-            st.plotly_chart(fig, use_container_width=True)
-
 # =====================================================
-# COMPARISON PAGE
+# ADVANCED SUBJECT COMPARISON
 # =====================================================
-elif page == "📊 Comparison Analysis":
+elif page == "Advanced Subject Comparison":
 
     st.header("Advanced Subject Comparison")
 
@@ -185,22 +156,27 @@ elif page == "📊 Comparison Analysis":
 
     temp = df[df[subject_col] == selected_subject]
 
+    # ---------------- ROW 1 ----------------
     c1, c2 = st.columns(2)
 
     with c1:
+        st.subheader("Bar Comparison")
+
         fig1 = px.bar(
             temp,
             y=feature,
-            title="Bar Comparison",
-            color_discrete_sequence=["#38bdf8"]
+            title="Bar Comparison"
         )
         fig1.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(255,255,255,0.06)",
             font_color="white"
         )
         st.plotly_chart(fig1, use_container_width=True)
 
     with c2:
+        st.subheader("Trend Line")
+
         fig2 = px.line(
             temp,
             y=feature,
@@ -209,16 +185,90 @@ elif page == "📊 Comparison Analysis":
         )
         fig2.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(255,255,255,0.06)",
             font_color="white"
         )
         st.plotly_chart(fig2, use_container_width=True)
 
+    # ---------------- ROW 2 ----------------
+    c3, c4 = st.columns(2)
+
+    with c3:
+        st.subheader("Pie Distribution")
+
+        fig3 = px.pie(
+            values=temp[feature],
+            names=temp.index,
+            hole=0.5
+        )
+        fig3.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            font_color="white"
+        )
+        st.plotly_chart(fig3, use_container_width=True)
+
+    with c4:
+        st.subheader("Area Chart")
+
+        fig4 = px.area(
+            temp,
+            y=feature
+        )
+        fig4.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(255,255,255,0.06)",
+            font_color="white"
+        )
+        st.plotly_chart(fig4, use_container_width=True)
+
+    # ---------------- ROW 3 ----------------
+    c5, c6 = st.columns(2)
+
+    with c5:
+        st.subheader("Scatter Plot")
+
+        fig5 = px.scatter(
+            temp,
+            x=temp.index,
+            y=feature,
+            size=feature
+        )
+        fig5.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(255,255,255,0.06)",
+            font_color="white"
+        )
+        st.plotly_chart(fig5, use_container_width=True)
+
+    with c6:
+        st.subheader("Radar Chart")
+
+        vals = temp[feature].tolist()
+
+        fig6 = go.Figure()
+
+        fig6.add_trace(go.Scatterpolar(
+            r=vals,
+            theta=[f"Trial {i+1}" for i in range(len(vals))],
+            fill='toself'
+        ))
+
+        fig6.update_layout(
+            polar=dict(
+                bgcolor="rgba(0,0,0,0)"
+            ),
+            paper_bgcolor="rgba(0,0,0,0)",
+            font_color="white"
+        )
+
+        st.plotly_chart(fig6, use_container_width=True)
+
 # =====================================================
 # LIVE MONITORING
 # =====================================================
-elif page == "📈 Live Monitoring":
+elif page == "Live Monitoring":
 
-    st.header("Real-Time Subject Monitoring")
+    st.header("Live Monitoring")
 
     subjects = sorted(df[subject_col].unique())
 
@@ -228,37 +278,33 @@ elif page == "📈 Live Monitoring":
     )
 
     feature = st.selectbox(
-        "Select Monitoring Metric",
+        "Select Metric",
         numeric_cols
     )
 
-    st.info(f"X-axis = Time (seconds) | Y-axis = {feature}")
+    st.info(f"X-axis = Time | Y-axis = {feature}")
 
     temp = df[df[subject_col] == selected_subject]
+
     base = float(temp[feature].mean())
 
     chart = st.line_chart(
         pd.DataFrame({feature:[base]})
     )
 
-    for i in range(30):
-
-        val = base + np.random.randn()*0.4
-
-        chart.add_rows(
-            pd.DataFrame({feature:[val]})
-        )
-
+    for i in range(25):
+        val = base + np.random.randn()*0.5
+        chart.add_rows(pd.DataFrame({feature:[val]}))
         time.sleep(0.2)
 
-    st.success("Monitoring Completed")
+    st.success("Monitoring Complete")
 
 # =====================================================
-# REPORT PAGE
+# CLINICAL REPORT
 # =====================================================
-elif page == "📋 Clinical Report":
+elif page == "Clinical Report":
 
-    st.header("Clinical Subject Report")
+    st.header("Clinical Report")
 
     subjects = sorted(df[subject_col].unique())
 
@@ -270,124 +316,35 @@ elif page == "📋 Clinical Report":
     temp = df[df[subject_col] == selected_subject]
 
     score = round(temp[numeric_cols].mean().mean(),2)
-    idx = subjects.index(selected_subject)
 
     if score >= 75:
         risk = "Low Risk"
-        color = "green"
     elif score >= 55:
         risk = "Moderate Risk"
-        color = "orange"
     else:
         risk = "High Risk"
-        color = "red"
 
-    findings = [
-        "Stable gait mechanics observed.",
-        "Minor balance fluctuation present.",
-        "Reduced motor coordination found.",
-        "Mild hesitation in backward motion.",
-        "Good dynamic control maintained.",
-        "Stride reduction detected.",
-        "Moderate instability identified.",
-        "Strong recovery response noted.",
-        "Variable cadence pattern present.",
-        "Stable posture maintained.",
-        "Transition hesitation visible.",
-        "Lower limb control satisfactory.",
-        "Mild fatigue trend present.",
-        "Strong mobility observed.",
-        "Backward stepping caution advised."
-    ]
+    st.metric("Clinical Score", score)
+    st.metric("Risk Level", risk)
 
-    recs = [
-        "Routine follow-up suggested.",
-        "Weekly balance drills advised.",
-        "Dual-task training recommended.",
-        "Coordination therapy suggested.",
-        "Maintain current exercise plan.",
-        "Stride training recommended.",
-        "Periodic supervision advised.",
-        "Continue gait retraining.",
-        "Cadence control exercises advised.",
-        "Maintain rehab schedule.",
-        "Confidence training suggested.",
-        "Strength maintenance advised.",
-        "Endurance drills recommended.",
-        "Continue active monitoring.",
-        "Close observation required."
-    ]
-
-    c1, c2, c3 = st.columns(3)
-
-    with c1:
-        st.metric("Clinical Score", score)
-
-    with c2:
-        st.metric("Risk Level", risk)
-
-    with c3:
-        st.metric("Subject Rank", idx+1)
-
-    st.markdown("---")
-
-    gauge = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=score,
-        title={'text':"Performance Score"},
-        gauge={
-            'axis': {'range':[0,100]},
-            'bar': {'color': color}
-        }
-    ))
-
-    gauge.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)",
-        font_color="white"
-    )
-
-    st.plotly_chart(gauge, use_container_width=True)
-
-    st.subheader("Clinical Findings")
-    st.write(findings[idx])
-
-    fig5 = px.bar(
+    fig7 = px.bar(
         x=temp[numeric_cols].mean().index,
         y=temp[numeric_cols].mean().values,
-        title="Average Subject Metrics",
-        color_discrete_sequence=["#38bdf8"]
+        title="Performance Summary"
     )
-
-    fig5.update_layout(
+    fig7.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(255,255,255,0.06)",
         font_color="white"
     )
-
-    st.plotly_chart(fig5, use_container_width=True)
-
-    st.subheader("Recommendation")
-    st.success(recs[idx])
+    st.plotly_chart(fig7, use_container_width=True)
 
     report = f"""
-MINOR PROJECT REPORT
-
-Project:
-Biomechanical and Neuromuscular Adaptations in Constrained Gait - Reverse Walking
+Clinical Report
 
 Subject: {selected_subject}
 Score: {score}
-Risk: {risk}
-
-Finding:
-{findings[idx]}
-
-Recommendation:
-{recs[idx]}
-
-Team:
-Anushka Singh
-Astha Singh
-Kratika Vashishtha
+Risk Level: {risk}
 """
 
     st.download_button(
