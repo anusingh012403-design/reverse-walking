@@ -1,71 +1,40 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 import plotly.express as px
-import plotly.graph_objects as go
 import time
 
 # =====================================================
 # PAGE CONFIG
 # =====================================================
 st.set_page_config(
-    page_title="Constrained Gait Dashboard",
+    page_title="Clinical Reverse Walking Dashboard",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # =====================================================
-# CUSTOM CSS
+# CSS DESIGN
 # =====================================================
 st.markdown("""
 <style>
-html, body, [data-testid="stAppViewContainer"] {
-    background: linear-gradient(135deg,#081b6b,#0b4fd9,#1da1f2);
-    color: white;
+.main {
+    background: #f8fafc;
 }
-
-/* Main container */
 .block-container {
     padding-top: 1rem;
 }
-
-/* Sidebar */
-[data-testid="stSidebar"] {
-    background: rgba(0,0,0,0.15);
-}
-
-/* Text */
-h1,h2,h3,h4,h5,p,label,span {
-    color: white !important;
-}
-
-/* Selectbox */
-div[data-baseweb="select"] > div {
-    background-color: rgba(255,255,255,0.12) !important;
-    color: white !important;
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 10px;
-}
-
-/* Dropdown text */
-div[data-baseweb="select"] * {
-    color: white !important;
-}
-
-/* Metric cards */
 div[data-testid="metric-container"] {
-    background: rgba(255,255,255,0.12);
-    border-radius: 14px;
+    background: linear-gradient(135deg,#ffffff,#f1f5f9);
+    border: 1px solid #e2e8f0;
     padding: 18px;
-    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 14px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
 }
-
-/* Buttons */
-.stButton>button {
-    background:#ffffff22;
-    color:white;
-    border-radius:10px;
-    border:1px solid #ffffff33;
+h1,h2,h3 {
+    color:#0f172a;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -84,27 +53,26 @@ subject_col = "subject" if "subject" in df.columns else df.columns[0]
 numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
 
 # =====================================================
-# HEADER
+# TITLE
 # =====================================================
-st.title("Constrained Gait")
-st.subheader('"Reverse Walking"')
-st.caption("Minor Project Dashboard")
+st.title("Clinical Reverse Walking Gait Dashboard")
+st.caption("Professional Subject Monitoring and Clinical Analysis System")
 
 # =====================================================
 # SIDEBAR
 # =====================================================
 page = st.sidebar.radio(
-    "Select Module",
+    "Navigation",
     [
         "Home",
-        "Advanced Subject Comparison",
+        "Comparison Analysis",
         "Live Monitoring",
         "Clinical Report"
     ]
 )
 
 # =====================================================
-# HOME
+# HOME PAGE (UPDATED)
 # =====================================================
 if page == "Home":
 
@@ -113,34 +81,85 @@ if page == "Home":
     c1, c2, c3, c4 = st.columns(4)
 
     with c1:
-        st.metric("Subjects", df[subject_col].nunique())
+        st.metric("Total Subjects", df[subject_col].nunique())
 
     with c2:
-        st.metric("Records", len(df))
+        st.metric("Total Records", len(df))
 
     with c3:
-        st.metric("Features", len(numeric_cols))
+        st.metric("Clinical Features", len(numeric_cols))
 
     with c4:
-        st.metric("Conditions", 3)
+        st.metric("Walking Conditions", 3)
 
     st.markdown("---")
 
-    st.write("""
-### Clinical Uses
-- Reverse walking assessment  
-- Balance monitoring  
-- Fall risk detection  
-- Subject comparison  
-- Clinical reporting  
+    left, right = st.columns([1.2, 1])
+
+    with left:
+
+        st.subheader("Clinical Objective")
+
+        st.write("""
+This dashboard evaluates reverse walking gait performance of subjects.
+
+### Main Applications:
+- Balance assessment
+- Fall risk screening
+- Mobility analysis
+- Neurological observation
+- Reverse walking comparison
+- Clinical reporting
 """)
 
-# =====================================================
-# ADVANCED SUBJECT COMPARISON
-# =====================================================
-elif page == "Advanced Subject Comparison":
+        st.success("System Ready for Clinical Evaluation")
 
-    st.header("Advanced Subject Comparison")
+    with right:
+
+        st.subheader("Condition Distribution")
+
+        if "condition" in df.columns:
+            pie = px.pie(
+                df,
+                names="condition",
+                hole=0.55,
+                title="Walking Conditions"
+            )
+            pie.update_layout(height=380)
+            st.plotly_chart(
+                pie,
+                use_container_width=True
+            )
+
+        else:
+            st.info("Condition column not found")
+
+    st.markdown("---")
+
+    st.subheader("Subject Participation Heatmap")
+
+    if "condition" in df.columns:
+
+        pivot = pd.crosstab(
+            df[subject_col],
+            df["condition"]
+        )
+
+        fig, ax = plt.subplots(figsize=(10,5))
+        sns.heatmap(
+            pivot,
+            annot=True,
+            cmap="Blues",
+            ax=ax
+        )
+        st.pyplot(fig)
+
+# =====================================================
+# COMPARISON PAGE
+# =====================================================
+elif page == "Comparison Analysis":
+
+    st.header("Subject Comparison")
 
     subjects = sorted(df[subject_col].unique())
 
@@ -156,119 +175,34 @@ elif page == "Advanced Subject Comparison":
 
     temp = df[df[subject_col] == selected_subject]
 
-    # ---------------- ROW 1 ----------------
     c1, c2 = st.columns(2)
 
     with c1:
         st.subheader("Bar Comparison")
-
-        fig1 = px.bar(
-            temp,
-            y=feature,
-            title="Bar Comparison"
-        )
-        fig1.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(255,255,255,0.06)",
-            font_color="white"
-        )
-        st.plotly_chart(fig1, use_container_width=True)
+        st.bar_chart(temp[feature])
 
     with c2:
-        st.subheader("Trend Line")
+        st.subheader("Line Trend")
+        st.line_chart(temp[feature])
 
-        fig2 = px.line(
-            temp,
-            y=feature,
-            markers=True,
-            title="Trend Line"
-        )
-        fig2.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(255,255,255,0.06)",
-            font_color="white"
-        )
-        st.plotly_chart(fig2, use_container_width=True)
-
-    # ---------------- ROW 2 ----------------
     c3, c4 = st.columns(2)
 
     with c3:
-        st.subheader("Pie Distribution")
-
-        fig3 = px.pie(
-            values=temp[feature],
-            names=temp.index,
-            hole=0.5
-        )
-        fig3.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            font_color="white"
-        )
-        st.plotly_chart(fig3, use_container_width=True)
+        fig2, ax2 = plt.subplots()
+        sns.boxplot(y=temp[feature], ax=ax2)
+        st.pyplot(fig2)
 
     with c4:
-        st.subheader("Area Chart")
-
-        fig4 = px.area(
-            temp,
-            y=feature
-        )
-        fig4.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(255,255,255,0.06)",
-            font_color="white"
-        )
-        st.plotly_chart(fig4, use_container_width=True)
-
-    # ---------------- ROW 3 ----------------
-    c5, c6 = st.columns(2)
-
-    with c5:
-        st.subheader("Scatter Plot")
-
-        fig5 = px.scatter(
-            temp,
-            x=temp.index,
-            y=feature,
-            size=feature
-        )
-        fig5.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(255,255,255,0.06)",
-            font_color="white"
-        )
-        st.plotly_chart(fig5, use_container_width=True)
-
-    with c6:
-        st.subheader("Radar Chart")
-
-        vals = temp[feature].tolist()
-
-        fig6 = go.Figure()
-
-        fig6.add_trace(go.Scatterpolar(
-            r=vals,
-            theta=[f"Trial {i+1}" for i in range(len(vals))],
-            fill='toself'
-        ))
-
-        fig6.update_layout(
-            polar=dict(
-                bgcolor="rgba(0,0,0,0)"
-            ),
-            paper_bgcolor="rgba(0,0,0,0)",
-            font_color="white"
-        )
-
-        st.plotly_chart(fig6, use_container_width=True)
+        fig3, ax3 = plt.subplots()
+        sns.histplot(temp[feature], kde=True, ax=ax3)
+        st.pyplot(fig3)
 
 # =====================================================
 # LIVE MONITORING
 # =====================================================
 elif page == "Live Monitoring":
 
-    st.header("Live Monitoring")
+    st.header("Live Subject Monitoring")
 
     subjects = sorted(df[subject_col].unique())
 
@@ -282,7 +216,7 @@ elif page == "Live Monitoring":
         numeric_cols
     )
 
-    st.info(f"X-axis = Time | Y-axis = {feature}")
+    st.info(f"X-axis = Time (sec) | Y-axis = {feature}")
 
     temp = df[df[subject_col] == selected_subject]
 
@@ -293,8 +227,13 @@ elif page == "Live Monitoring":
     )
 
     for i in range(25):
-        val = base + np.random.randn()*0.5
-        chart.add_rows(pd.DataFrame({feature:[val]}))
+
+        val = base + np.random.randn()*0.4
+
+        chart.add_rows(
+            pd.DataFrame({feature:[val]})
+        )
+
         time.sleep(0.2)
 
     st.success("Monitoring Complete")
@@ -304,7 +243,7 @@ elif page == "Live Monitoring":
 # =====================================================
 elif page == "Clinical Report":
 
-    st.header("Clinical Report")
+    st.header("Clinical Subject Report")
 
     subjects = sorted(df[subject_col].unique())
 
@@ -317,6 +256,8 @@ elif page == "Clinical Report":
 
     score = round(temp[numeric_cols].mean().mean(),2)
 
+    idx = subjects.index(selected_subject)
+
     if score >= 75:
         risk = "Low Risk"
     elif score >= 55:
@@ -324,27 +265,71 @@ elif page == "Clinical Report":
     else:
         risk = "High Risk"
 
+    findings = [
+        "Stable gait pattern observed.",
+        "Minor balance fluctuation detected.",
+        "Reduced coordination response.",
+        "Mild hesitation in backward motion.",
+        "Good dynamic control noted.",
+        "Stride length reduction present.",
+        "Moderate instability observed.",
+        "Strong recovery response found.",
+        "Variable cadence pattern seen.",
+        "Good postural alignment.",
+        "Task transition hesitation.",
+        "Satisfactory limb control.",
+        "Fatigue tendency visible.",
+        "Excellent mobility control.",
+        "Cautious stepping pattern."
+    ]
+
+    recs = [
+        "Routine follow-up advised.",
+        "Weekly balance drills.",
+        "Dual-task training suggested.",
+        "Coordination therapy advised.",
+        "Maintain current exercise plan.",
+        "Stride improvement drills.",
+        "Periodic supervision needed.",
+        "Continue mobility practice.",
+        "Cadence training suggested.",
+        "Maintain rehab schedule.",
+        "Confidence training advised.",
+        "Strength program suggested.",
+        "Endurance exercises advised.",
+        "Continue active monitoring.",
+        "Close supervision recommended."
+    ]
+
     st.metric("Clinical Score", score)
     st.metric("Risk Level", risk)
 
-    fig7 = px.bar(
+    st.write(findings[idx])
+
+    fig4 = px.bar(
         x=temp[numeric_cols].mean().index,
         y=temp[numeric_cols].mean().values,
-        title="Performance Summary"
+        title="Performance Metrics"
     )
-    fig7.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(255,255,255,0.06)",
-        font_color="white"
+    st.plotly_chart(
+        fig4,
+        use_container_width=True
     )
-    st.plotly_chart(fig7, use_container_width=True)
+
+    st.success(recs[idx])
 
     report = f"""
 Clinical Report
 
 Subject: {selected_subject}
 Score: {score}
-Risk Level: {risk}
+Risk: {risk}
+
+Finding:
+{findings[idx]}
+
+Recommendation:
+{recs[idx]}
 """
 
     st.download_button(
