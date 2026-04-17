@@ -15,54 +15,38 @@ st.set_page_config(
 )
 
 # =====================================================
-# PROFESSIONAL CLINICAL CSS
+# PROFESSIONAL CSS + FONT
 # =====================================================
 st.markdown("""
 <style>
-/* Main App Background */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Poppins', sans-serif;
+}
+
 .stApp {
     background: linear-gradient(135deg,#0f172a,#1e3a8a,#0ea5e9);
 }
 
-/* Main content area */
 .block-container {
     padding-top: 1rem;
-    padding-bottom: 2rem;
 }
 
-/* Text colors */
 h1,h2,h3,h4,h5,h6,p,label,span,div {
     color: white !important;
 }
 
-/* Metric Cards */
 div[data-testid="metric-container"] {
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.18);
-    border-radius: 16px;
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.15);
     padding: 18px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 
-/* Sidebar */
 section[data-testid="stSidebar"] {
     background: #0f172a;
-}
-
-/* Buttons */
-.stButton>button {
-    border-radius: 10px;
-    border: none;
-}
-
-/* Dataframe */
-[data-testid="stDataFrame"] {
-    background: white;
-}
-
-/* Selectbox */
-div[data-baseweb="select"] {
-    color: black !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -88,7 +72,7 @@ st.subheader('"Reverse Walking"')
 st.caption("Minor Project Dashboard | Team: Anushka Singh | Astha Singh | Kratika Vashishtha")
 
 # =====================================================
-# SIDEBAR NAVIGATION WITH LOGOS
+# SIDEBAR
 # =====================================================
 page = st.sidebar.radio(
     "Navigation",
@@ -123,28 +107,26 @@ if page == "🏠 Home":
 
     st.markdown("---")
 
-    left, right = st.columns([1.2,1])
+    col1, col2 = st.columns([1.2,1])
 
-    with left:
-
+    with col1:
         st.subheader("Project Objective")
 
         st.write("""
-This project analyzes biomechanical and neuromuscular adaptations during reverse walking.
+This project evaluates biomechanical and neuromuscular adaptations during reverse walking.
 
-### Key Clinical Areas:
+### Key Focus Areas:
 - Balance Stability
-- Cadence Response
 - Motor Coordination
+- Cadence Changes
 - Functional Mobility
-- Fall Risk Screening
-- Performance Tracking
+- Fall Risk Monitoring
 """)
 
-        st.progress(90)
-        st.success("System Ready for Demonstration")
+        st.progress(92)
+        st.success("Dashboard Ready for Review")
 
-    with right:
+    with col2:
 
         if "condition" in df.columns:
 
@@ -152,7 +134,7 @@ This project analyzes biomechanical and neuromuscular adaptations during reverse
                 df,
                 names="condition",
                 hole=0.55,
-                title="Walking Conditions Distribution",
+                title="Walking Conditions",
                 color_discrete_sequence=["#38bdf8","#60a5fa","#2563eb"]
             )
 
@@ -173,18 +155,13 @@ elif page == "📊 Comparison Analysis":
 
     subjects = sorted(df[subject_col].unique())
 
-    selected_subject = st.selectbox(
-        "Select Subject",
-        subjects
-    )
+    selected_subject = st.selectbox("Select Subject", subjects)
 
-    feature = st.selectbox(
-        "Select Metric",
-        numeric_cols
-    )
+    feature = st.selectbox("Select Metric", numeric_cols)
 
     temp = df[df[subject_col] == selected_subject]
 
+    # ---------------- BAR + LINE ----------------
     c1, c2 = st.columns(2)
 
     with c1:
@@ -205,7 +182,7 @@ elif page == "📊 Comparison Analysis":
             temp,
             y=feature,
             markers=True,
-            title="Trend Line"
+            title="Trend Comparison"
         )
         fig2.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
@@ -213,41 +190,81 @@ elif page == "📊 Comparison Analysis":
         )
         st.plotly_chart(fig2, use_container_width=True)
 
+    # ---------------- RADAR CHART ----------------
+    st.subheader("Radar Performance Comparison")
+
+    radar_cols = numeric_cols[:5] if len(numeric_cols) >= 5 else numeric_cols
+
+    values = temp[radar_cols].mean().tolist()
+
+    radar = go.Figure()
+
+    radar.add_trace(go.Scatterpolar(
+        r=values,
+        theta=radar_cols,
+        fill='toself',
+        name=str(selected_subject),
+        line_color="#38bdf8"
+    ))
+
+    radar.update_layout(
+        polar=dict(
+            radialaxis=dict(visible=True)
+        ),
+        paper_bgcolor="rgba(0,0,0,0)",
+        font_color="white",
+        height=500
+    )
+
+    st.plotly_chart(radar, use_container_width=True)
+
+    # ---------------- ALL SUBJECTS COMPARISON ----------------
+    st.subheader("Subject vs Overall Average")
+
+    compare_df = df.groupby(subject_col)[feature].mean().reset_index()
+
+    fig3 = px.bar(
+        compare_df,
+        x=subject_col,
+        y=feature,
+        color=subject_col,
+        title="All Subject Comparison"
+    )
+
+    fig3.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        font_color="white",
+        showlegend=False
+    )
+
+    st.plotly_chart(fig3, use_container_width=True)
+
 # =====================================================
 # LIVE MONITORING
 # =====================================================
 elif page == "📈 Live Monitoring":
 
-    st.header("Real-Time Subject Monitoring")
+    st.header("Real-Time Monitoring")
 
     subjects = sorted(df[subject_col].unique())
 
-    selected_subject = st.selectbox(
-        "Select Subject",
-        subjects
-    )
+    selected_subject = st.selectbox("Select Subject", subjects)
 
-    feature = st.selectbox(
-        "Select Monitoring Metric",
-        numeric_cols
-    )
+    feature = st.selectbox("Select Monitoring Metric", numeric_cols)
 
     st.info(f"X-axis = Time (seconds) | Y-axis = {feature}")
 
     temp = df[df[subject_col] == selected_subject]
+
     base = float(temp[feature].mean())
 
-    chart = st.line_chart(
-        pd.DataFrame({feature:[base]})
-    )
+    chart = st.line_chart(pd.DataFrame({feature:[base]}))
 
     for i in range(30):
 
         val = base + np.random.randn()*0.4
 
-        chart.add_rows(
-            pd.DataFrame({feature:[val]})
-        )
+        chart.add_rows(pd.DataFrame({feature:[val]}))
 
         time.sleep(0.2)
 
@@ -262,14 +279,12 @@ elif page == "📋 Clinical Report":
 
     subjects = sorted(df[subject_col].unique())
 
-    selected_subject = st.selectbox(
-        "Select Subject",
-        subjects
-    )
+    selected_subject = st.selectbox("Select Subject", subjects)
 
     temp = df[df[subject_col] == selected_subject]
 
     score = round(temp[numeric_cols].mean().mean(),2)
+
     idx = subjects.index(selected_subject)
 
     if score >= 75:
@@ -285,37 +300,37 @@ elif page == "📋 Clinical Report":
     findings = [
         "Stable gait mechanics observed.",
         "Minor balance fluctuation present.",
-        "Reduced motor coordination found.",
-        "Mild hesitation in backward motion.",
+        "Reduced coordination response.",
+        "Mild hesitation in movement.",
         "Good dynamic control maintained.",
         "Stride reduction detected.",
-        "Moderate instability identified.",
-        "Strong recovery response noted.",
-        "Variable cadence pattern present.",
+        "Moderate instability present.",
+        "Good recovery response.",
+        "Variable cadence pattern.",
         "Stable posture maintained.",
         "Transition hesitation visible.",
-        "Lower limb control satisfactory.",
+        "Satisfactory limb control.",
         "Mild fatigue trend present.",
         "Strong mobility observed.",
-        "Backward stepping caution advised."
+        "Backward caution advised."
     ]
 
     recs = [
-        "Routine follow-up suggested.",
-        "Weekly balance drills advised.",
-        "Dual-task training recommended.",
-        "Coordination therapy suggested.",
-        "Maintain current exercise plan.",
+        "Routine follow-up advised.",
+        "Balance drills recommended.",
+        "Dual-task training suggested.",
+        "Coordination exercises advised.",
+        "Maintain current plan.",
         "Stride training recommended.",
-        "Periodic supervision advised.",
-        "Continue gait retraining.",
-        "Cadence control exercises advised.",
+        "Periodic supervision needed.",
+        "Continue mobility drills.",
+        "Cadence training advised.",
         "Maintain rehab schedule.",
-        "Confidence training suggested.",
-        "Strength maintenance advised.",
+        "Confidence exercises suggested.",
+        "Strength training advised.",
         "Endurance drills recommended.",
         "Continue active monitoring.",
-        "Close observation required."
+        "Close supervision advised."
     ]
 
     c1, c2, c3 = st.columns(3)
@@ -351,28 +366,11 @@ elif page == "📋 Clinical Report":
     st.subheader("Clinical Findings")
     st.write(findings[idx])
 
-    fig5 = px.bar(
-        x=temp[numeric_cols].mean().index,
-        y=temp[numeric_cols].mean().values,
-        title="Average Subject Metrics",
-        color_discrete_sequence=["#38bdf8"]
-    )
-
-    fig5.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)",
-        font_color="white"
-    )
-
-    st.plotly_chart(fig5, use_container_width=True)
-
     st.subheader("Recommendation")
     st.success(recs[idx])
 
     report = f"""
 MINOR PROJECT REPORT
-
-Project:
-Biomechanical and Neuromuscular Adaptations in Constrained Gait - Reverse Walking
 
 Subject: {selected_subject}
 Score: {score}
@@ -383,11 +381,6 @@ Finding:
 
 Recommendation:
 {recs[idx]}
-
-Team:
-Anushka Singh
-Astha Singh
-Kratika Vashishtha
 """
 
     st.download_button(
