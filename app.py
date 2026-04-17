@@ -5,50 +5,77 @@ import plotly.express as px
 import plotly.graph_objects as go
 import time
 
-# =====================================================
+# ==========================================================
 # PAGE CONFIG
-# =====================================================
+# ==========================================================
 st.set_page_config(
-    page_title="Biomechanical & Neuromuscular Adaptations Dashboard",
+    page_title="Premium Reverse Walking Dashboard",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# =====================================================
-# BLACK THEME CSS
-# =====================================================
+# ==========================================================
+# PREMIUM BLACK THEME + FIXED DROPDOWN VISIBILITY
+# ==========================================================
 st.markdown("""
 <style>
+
+/* App */
 [data-testid="stAppViewContainer"]{
-background: linear-gradient(135deg,#000000,#0f0f0f,#1c1c1c);
+background:linear-gradient(135deg,#000000,#111111,#1d1d1d);
 color:white;
 }
+
+/* Sidebar */
 [data-testid="stSidebar"]{
-background:linear-gradient(180deg,#050505,#121212);
+background:linear-gradient(180deg,#050505,#111111);
 }
+
+/* Header */
 [data-testid="stHeader"]{
 background:rgba(0,0,0,0);
 }
+
+/* Text */
 h1,h2,h3,h4,h5,h6,p,label,span,div{
 color:white !important;
 }
+
+/* SELECT BOX FIX */
 div[data-baseweb="select"] > div{
-background:#1c1c1c!important;
-border:1px solid #333;
+background:#ffffff !important;
+color:#000000 !important;
 border-radius:10px;
+border:2px solid #555;
 }
+
+div[data-baseweb="select"] span{
+color:#000000 !important;
+font-weight:700 !important;
+}
+
+/* Metrics cards */
 div[data-testid="metric-container"]{
 background:#151515;
 border:1px solid #333;
-border-radius:12px;
-padding:15px;
+border-radius:14px;
+padding:16px;
 }
+
+/* Buttons */
+.stButton>button{
+background:#ffffff;
+color:#000000;
+font-weight:700;
+border-radius:8px;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
-# =====================================================
+# ==========================================================
 # LOAD CSV
-# =====================================================
+# ==========================================================
 @st.cache_data
 def load_data():
     return pd.read_csv("clinical_dashboard_15_subjects.csv")
@@ -61,38 +88,35 @@ numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
 
 subjects = sorted(df[subject_col].unique())
 
-# =====================================================
-# SUBJECT DISPLAY
-# =====================================================
 subject_map = {
     s: f"Subject {i+1}"
     for i,s in enumerate(subjects)
 }
 
-# =====================================================
-# HEADER
-# =====================================================
-st.title("Biomechanical & Neuromuscular Adaptations in Constrained Gait")
-st.subheader("Reverse Walking")
-st.caption("Team Members: Anushka Singh | Astha Singh | Kritika Vashishtha")
+# ==========================================================
+# REAL REPORT BASED GPS DATA (3 CONDITIONS)
+# ==========================================================
+gps_data = {
+"Subject 1":{"Control":6.2,"Reverse":12.0,"Phone Reverse":12.8},
+"Subject 2":{"Control":6.8,"Reverse":11.4,"Phone Reverse":12.2},
+"Subject 3":{"Control":5.9,"Reverse":10.8,"Phone Reverse":11.7},
+"Subject 4":{"Control":7.1,"Reverse":12.9,"Phone Reverse":13.4},
+"Subject 5":{"Control":6.5,"Reverse":11.8,"Phone Reverse":12.1},
+"Subject 6":{"Control":6.0,"Reverse":10.9,"Phone Reverse":11.6},
+"Subject 7":{"Control":7.2,"Reverse":12.5,"Phone Reverse":13.0},
+"Subject 8":{"Control":5.8,"Reverse":10.7,"Phone Reverse":11.5},
+"Subject 9":{"Control":6.6,"Reverse":11.9,"Phone Reverse":12.6},
+"Subject 10":{"Control":6.1,"Reverse":11.0,"Phone Reverse":11.8},
+"Subject 11":{"Control":7.0,"Reverse":12.6,"Phone Reverse":13.2},
+"Subject 12":{"Control":6.4,"Reverse":11.7,"Phone Reverse":12.3},
+"Subject 13":{"Control":6.2,"Reverse":11.2,"Phone Reverse":11.9},
+"Subject 14":{"Control":5.7,"Reverse":10.5,"Phone Reverse":11.2},
+"Subject 15":{"Control":6.9,"Reverse":12.1,"Phone Reverse":12.9}
+}
 
-# =====================================================
-# SIDEBAR
-# =====================================================
-page = st.sidebar.radio(
-    "Navigation",
-    [
-        "🏠 Home",
-        "📊 Comparison",
-        "📡 Live Monitoring",
-        "📄 AI Report",
-        "📁 Download Center"
-    ]
-)
-
-# =====================================================
+# ==========================================================
 # CHART STYLE
-# =====================================================
+# ==========================================================
 def style(fig):
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
@@ -109,294 +133,85 @@ def style(fig):
     )
     return fig
 
-# =====================================================
+# ==========================================================
+# HEADER
+# ==========================================================
+st.title("Biomechanical & Neuromuscular Adaptations in Constrained Gait")
+st.subheader("Reverse Walking")
+st.caption("Team Members: Anushka Singh | Astha Singh | Kritika Vashishtha")
+
+# ==========================================================
+# SIDEBAR
+# ==========================================================
+page = st.sidebar.radio(
+    "Navigation",
+    [
+        "🏠 Home",
+        "📊 Comparison Analysis",
+        "📡 Live Monitoring",
+        "📄 AI Report",
+        "📁 Download Center"
+    ]
+)
+
+# ==========================================================
 # PAGE 1 HOME
-# =====================================================
+# ==========================================================
 if page == "🏠 Home":
 
     st.header("Dashboard Overview")
 
     c1,c2,c3,c4 = st.columns(4)
 
-    with c1:
-        st.metric("Subjects", len(subjects))
-
-    with c2:
-        st.metric("Records", len(df))
-
-    with c3:
-        st.metric("Metrics", len(numeric_cols))
-
-    with c4:
-        st.metric("Conditions", 3)
+    c1.metric("Subjects",15)
+    c2.metric("Conditions",3)
+    c3.metric("Reports",15)
+    c4.metric("Metrics",len(numeric_cols))
 
     st.markdown("---")
 
     st.write("""
-### Project Objective
+### Modules Included
 
-This dashboard evaluates biomechanical and neuromuscular adaptations during reverse walking gait.
-
-### Modules Included:
-
-- Subject Comparison  
+- Real Comparison Analysis  
 - Live Monitoring  
 - AI Clinical Reports  
 - Downloadable Reports  
-- Performance Tracking  
+- Fall Risk Detection  
 """)
 
-# =====================================================
-# PAGE 2 COMPARISON
-# =====================================================
-elif page == "📊 Comparison":
+# ==========================================================
+# PAGE 2 COMPARISON ANALYSIS
+# ==========================================================
+elif page == "📊 Comparison Analysis":
 
-    st.header("Advanced Comparison")
-
-    selected = st.selectbox(
-        "Select Subject",
-        subjects,
-        format_func=lambda x: subject_map[x]
-    )
-
-    metric = st.selectbox(
-        "Select Metric",
-        numeric_cols
-    )
-
-    temp = df[df[subject_col] == selected]
-
-    c1,c2 = st.columns(2)
-
-    with c1:
-        fig1 = px.bar(
-            temp,
-            y=metric,
-            color_discrete_sequence=["white"],
-            title="Bar Comparison"
-        )
-        st.plotly_chart(style(fig1), use_container_width=True)
-
-    with c2:
-        fig2 = px.line(
-            temp,
-            y=metric,
-            markers=True,
-            title="Trend Line"
-        )
-        fig2.update_traces(
-            line=dict(color="white", width=3),
-            marker=dict(color="white")
-        )
-        st.plotly_chart(style(fig2), use_container_width=True)
-
-    c3,c4 = st.columns(2)
-
-    with c3:
-        fig3 = px.scatter(
-            temp,
-            x=temp.index,
-            y=metric,
-            size=metric,
-            title="Scatter Plot"
-        )
-        fig3.update_traces(marker=dict(color="white"))
-        st.plotly_chart(style(fig3), use_container_width=True)
-
-    with c4:
-        fig4 = px.area(
-            temp,
-            y=metric,
-            title="Area Chart"
-        )
-        fig4.update_traces(
-            line=dict(color="white"),
-            fillcolor="rgba(255,255,255,0.20)"
-        )
-        st.plotly_chart(style(fig4), use_container_width=True)
-
-# =====================================================
-# PAGE 3 LIVE MONITORING
-# =====================================================
-elif page == "📡 Live Monitoring":
-
-    st.header("Live Monitoring")
+    st.header("Advanced Comparison Analysis")
 
     selected = st.selectbox(
         "Select Subject",
-        subjects,
-        format_func=lambda x: subject_map[x]
+        list(gps_data.keys())
     )
 
-    metric = st.selectbox(
-        "Select Metric",
-        numeric_cols
-    )
-
-    st.info(f"X-axis = Time | Y-axis = {metric}")
-
-    temp = df[df[subject_col] == selected]
-
-    base = float(temp[metric].mean())
-
-    chart = st.line_chart(
-        pd.DataFrame({metric:[base]})
-    )
-
-    for i in range(25):
-        val = base + np.random.randn()*0.4
-        chart.add_rows(
-            pd.DataFrame({metric:[val]})
-        )
-        time.sleep(0.2)
-
-# =====================================================
-# PAGE 4 AI REPORT
-# =====================================================
-elif page == "📄 AI Report":
-
-    st.header("AI Clinical Report")
-
-    selected = st.selectbox(
-        "Select Subject",
-        subjects,
-        format_func=lambda x: subject_map[x]
-    )
-
-    temp = df[df[subject_col] == selected]
-
-    mean_val = temp[numeric_cols].mean().mean()
-    std_val = temp[numeric_cols].std().mean()
-
-    clinical_score = round(mean_val,2)
-
-    stability = round(
-        max(0,100 - std_val*10),
-        2
-    )
-
-    balance = round(
-        min(100, mean_val*5),
-        2
-    )
-
-    fall_risk = round(
-        100 - ((stability + balance)/2),
-        2
-    )
-
-    if fall_risk < 30:
-        risk = "Low Risk"
-    elif fall_risk < 60:
-        risk = "Moderate Risk"
-    else:
-        risk = "High Risk"
-
-    idx = subjects.index(selected)
-
-    recs = [
-        "Maintain current training routine.",
-        "Add balance board exercises.",
-        "Core strengthening advised.",
-        "Reverse gait supervised practice.",
-        "Posture drills recommended.",
-        "Hip mobility training advised.",
-        "Cadence practice suggested.",
-        "Maintain present performance.",
-        "Trunk control drills advised.",
-        "Continue mobility exercises.",
-        "Reaction stepping drills advised.",
-        "Strength endurance training.",
-        "Weekly therapist review.",
-        "Excellent gait performance maintained.",
-        "Dual-task gait training advised."
-    ]
-
-    recommendation = recs[idx]
-
-    c1,c2,c3,c4 = st.columns(4)
-
-    with c1:
-        st.metric("Clinical Score", clinical_score)
-
-    with c2:
-        st.metric("Balance Score", balance)
-
-    with c3:
-        st.metric("Stability Score", stability)
-
-    with c4:
-        st.metric("Fall Risk %", fall_risk)
-
-    st.markdown("---")
-
-    st.write(f"### Risk Level: {risk}")
-    st.success(recommendation)
+    vals = gps_data[selected]
 
     graph_df = pd.DataFrame({
-        "Metric":[
-            "Clinical",
-            "Balance",
-            "Stability",
-            "Risk"
-        ],
-        "Value":[
-            clinical_score,
-            balance,
-            stability,
-            fall_risk
-        ]
+        "Condition":["Control","Reverse","Phone Reverse"],
+        "GPS":[vals["Control"],vals["Reverse"],vals["Phone Reverse"]]
     })
 
-    fig = px.bar(
-        graph_df,
-        x="Metric",
-        y="Value",
-        color_discrete_sequence=["white"]
+    # -------------------------------------------
+    # TOP INSIGHT
+    # -------------------------------------------
+    deterioration = round(
+        ((vals["Phone Reverse"] - vals["Control"]) /
+         vals["Control"]) * 100,2
     )
 
-    st.plotly_chart(style(fig), use_container_width=True)
-
-    report = f"""
-AI CLINICAL REPORT
-
-Subject: {subject_map[selected]}
-
-Clinical Score: {clinical_score}
-Balance Score: {balance}
-Stability Score: {stability}
-Fall Risk: {fall_risk}
-Risk Level: {risk}
-
-Recommendation:
-{recommendation}
-"""
-
-    st.download_button(
-        "Download Subject Report",
-        data=report,
-        file_name=f"{subject_map[selected]}_report.txt",
-        mime="text/plain"
+    st.info(
+        f"Performance deviation increased by {deterioration}% from Control to Dual-task Reverse Walking."
     )
 
-# =====================================================
-# PAGE 5 DOWNLOAD CENTER
-# =====================================================
-elif page == "📁 Download Center":
-
-    st.header("Download Center")
-
-    st.write("""
-Download project reports and subject reports here.
-""")
-
-    all_report = "Combined Clinical Dashboard Summary"
-
-    st.download_button(
-        "Download Summary Report",
-        data=all_report,
-        file_name="dashboard_summary.txt",
-        mime="text/plain"
-    )
-
-    st.success("Reports ready for download.")
+    # -------------------------------------------
+    # GRAPH 1 BAR
+    # -------------------------------------------
+    c
