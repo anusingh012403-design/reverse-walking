@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from io import BytesIO
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
@@ -21,12 +20,12 @@ df = load_data()
 # ---------------- CLEAN COLUMN NAMES ----------------
 df.columns = df.columns.str.strip().str.lower()
 
-# ---------------- DETECT SUBJECT COLUMN ----------------
+# ---------------- SUBJECT COLUMN ----------------
 subject_col = "subject" if "subject" in df.columns else df.columns[0]
 
 # ---------------- TITLE ----------------
 st.title("🩺 AI Clinical Reverse Walking Gait Analysis Dashboard")
-st.markdown("Advanced Clinical Dashboard for Reverse Walking Subjects")
+st.markdown("Smart Clinical Monitoring System for Reverse Walking Analysis")
 
 # ---------------- SIDEBAR ----------------
 page = st.sidebar.radio(
@@ -35,8 +34,7 @@ page = st.sidebar.radio(
         "Home",
         "Comparison Analysis",
         "Live Monitoring",
-        "AI Report",
-        "Dataset"
+        "AI Report"
     ]
 )
 
@@ -63,20 +61,20 @@ if page == "Home":
     st.subheader("Clinical Objective")
 
     st.write("""
-    This intelligent dashboard evaluates reverse walking patterns of subjects.
-    
-    Reverse walking helps assess:
-    - Balance control
-    - Fall risk
-    - Coordination
-    - Motor planning
-    - Cognitive load response
-    """)
+This AI-powered system evaluates reverse walking performance to support clinical gait analysis.
 
-    st.success("System Ready for Clinical Monitoring")
+### Key Uses:
+- Fall risk screening
+- Balance assessment
+- Neurological monitoring
+- Mobility comparison
+- Functional movement analysis
+""")
+
+    st.info("Designed for professional clinical gait evaluation.")
 
 # =====================================================
-# PAGE 2 COMPARISON
+# PAGE 2 COMPARISON ANALYSIS
 # =====================================================
 elif page == "Comparison Analysis":
 
@@ -87,49 +85,41 @@ elif page == "Comparison Analysis":
 
     temp = df[df[subject_col] == selected_subject]
 
-    st.write("Showing all records for selected subject")
-
     numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
 
-    if len(numeric_cols) >= 2:
+    if len(numeric_cols) > 0:
 
-        col = st.selectbox("Select Feature", numeric_cols)
+        feature = st.selectbox("Select Feature", numeric_cols)
 
-        # Chart 1 Bar
         st.subheader("1. Bar Chart")
-        st.bar_chart(temp[col])
+        st.bar_chart(temp[feature])
 
-        # Chart 2 Line
         st.subheader("2. Line Chart")
-        st.line_chart(temp[col])
+        st.line_chart(temp[feature])
 
-        # Chart 3 Area
         st.subheader("3. Area Chart")
-        st.area_chart(temp[col])
+        st.area_chart(temp[feature])
 
-        # Chart 4 Histogram
         st.subheader("4. Histogram")
-        fig, ax = plt.subplots()
-        sns.histplot(temp[col], kde=True, ax=ax)
-        st.pyplot(fig)
+        fig1, ax1 = plt.subplots()
+        sns.histplot(temp[feature], kde=True, ax=ax1)
+        st.pyplot(fig1)
 
-        # Chart 5 Boxplot
-        st.subheader("5. Boxplot")
+        st.subheader("5. Box Plot")
         fig2, ax2 = plt.subplots()
-        sns.boxplot(y=temp[col], ax=ax2)
+        sns.boxplot(y=temp[feature], ax=ax2)
         st.pyplot(fig2)
 
-        # Chart 6 Scatter
         if len(numeric_cols) >= 2:
             st.subheader("6. Scatter Plot")
-            xcol = numeric_cols[0]
-            ycol = numeric_cols[1]
             fig3, ax3 = plt.subplots()
             sns.scatterplot(
-                x=temp[xcol],
-                y=temp[ycol],
+                x=temp[numeric_cols[0]],
+                y=temp[numeric_cols[1]],
                 ax=ax3
             )
+            ax3.set_xlabel(numeric_cols[0])
+            ax3.set_ylabel(numeric_cols[1])
             st.pyplot(fig3)
 
 # =====================================================
@@ -137,101 +127,94 @@ elif page == "Comparison Analysis":
 # =====================================================
 elif page == "Live Monitoring":
 
-    st.header("Real Time Clinical Monitoring")
+    st.header("Live Clinical Monitoring")
 
     st.markdown("""
-    **X-axis:** Time (seconds)  
-    **Y-axis:** Gait Stability Score
-    """)
+### Real Time Monitoring
 
-    chart = st.line_chart(pd.DataFrame(np.random.randn(10,1)))
+**X-axis:** Time (seconds)  
+**Y-axis:** Gait Stability Score
+""")
 
-    for i in range(30):
-        new = pd.DataFrame(np.random.randn(1,1))
-        chart.add_rows(new)
+    chart = st.line_chart(
+        pd.DataFrame(np.random.randn(10, 1))
+    )
 
-    st.success("Live monitoring active")
+    for i in range(25):
+        new_data = pd.DataFrame(np.random.randn(1, 1))
+        chart.add_rows(new_data)
+
+    st.success("Monitoring Active")
 
 # =====================================================
 # PAGE 4 AI REPORT
 # =====================================================
 elif page == "AI Report":
 
-    st.header("AI Generated Clinical Report")
+    st.header("AI Generated Clinical Subject Report")
 
+    subjects = sorted(df[subject_col].unique())
     selected_subject = st.selectbox(
         "Select Subject for Report",
-        sorted(df[subject_col].unique())
+        subjects
     )
 
     temp = df[df[subject_col] == selected_subject]
 
     numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
 
-    avg_score = round(temp[numeric_cols].mean().mean(),2)
+    score = round(temp[numeric_cols].mean().mean(), 2)
 
-    if avg_score > 70:
-        risk = "Low Risk"
-    elif avg_score > 40:
-        risk = "Moderate Risk"
+    if score > 70:
+        risk = "Low Fall Risk"
+    elif score > 40:
+        risk = "Moderate Fall Risk"
     else:
-        risk = "High Risk"
+        risk = "High Fall Risk"
 
     st.subheader("Clinical Summary")
 
     st.write(f"""
-    Subject ID: {selected_subject}
+### Subject ID: {selected_subject}
 
-    Reverse walking performance indicates **{risk}** of fall.
+### Risk Level: {risk}
 
-    Clinical Findings:
-    - Balance mildly affected
-    - Step symmetry acceptable
-    - Coordination monitored
-    - Recommend physiotherapy if needed
-    """)
+### Findings:
+- Reverse gait analyzed successfully
+- Balance response monitored
+- Movement coordination reviewed
+- Functional mobility assessed
 
-    # Graph
+### Recommendation:
+Continue supervised gait exercise and regular monitoring.
+""")
+
     if len(numeric_cols) > 0:
-        feature = numeric_cols[0]
-
         fig4, ax4 = plt.subplots()
-        ax4.plot(temp[feature], marker="o")
-        ax4.set_title("Subject Performance Trend")
+        ax4.plot(temp[numeric_cols[0]], marker="o")
+        ax4.set_title("Performance Trend")
+        ax4.set_xlabel("Trial")
+        ax4.set_ylabel(numeric_cols[0])
         st.pyplot(fig4)
 
-    # Download text report
-    report = f"""
+    report_text = f"""
 AI CLINICAL REPORT
 
 Subject: {selected_subject}
-
 Risk Level: {risk}
+Average Score: {score}
 
-Average Score: {avg_score}
+Findings:
+Reverse gait performance reviewed.
+Balance and coordination assessed.
 
 Recommendation:
-Continue gait training and balance monitoring.
+Continue therapy and monitor progression.
 """
 
     st.download_button(
         label="Download Full Report",
-        data=report,
-        file_name=f"{selected_subject}_clinical_report.txt",
+        data=report_text,
+        file_name=f"{selected_subject}_report.txt",
         mime="text/plain"
     )
-
-# =====================================================
-# PAGE 5 DATASET
-# =====================================================
-elif page == "Dataset":
-
-    st.header("Full Dataset")
-
-    st.dataframe(df, use_container_width=True)
-
-    st.subheader("Rows and Columns")
-    st.write(df.shape)
-
-    st.subheader("Missing Values")
-    st.write(df.isnull().sum())
