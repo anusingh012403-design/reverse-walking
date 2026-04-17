@@ -15,59 +15,61 @@ st.set_page_config(
 )
 
 # ==========================================================
-# PREMIUM BLACK THEME + FIXED DROPDOWN VISIBILITY
+# WHITE THEME CSS
 # ==========================================================
 st.markdown("""
 <style>
 
-/* App */
+/* Main */
 [data-testid="stAppViewContainer"]{
-background:linear-gradient(135deg,#000000,#111111,#1d1d1d);
-color:white;
+background:linear-gradient(135deg,#ffffff,#f7f9fc,#eef3ff);
+color:#111111;
 }
 
 /* Sidebar */
 [data-testid="stSidebar"]{
-background:linear-gradient(180deg,#050505,#111111);
+background:linear-gradient(180deg,#f1f5ff,#dfe9ff);
 }
 
 /* Header */
 [data-testid="stHeader"]{
-background:rgba(0,0,0,0);
+background:rgba(255,255,255,0);
 }
 
 /* Text */
 h1,h2,h3,h4,h5,h6,p,label,span,div{
-color:white !important;
+color:#111111 !important;
 }
 
-/* SELECT BOX FIX */
+/* Select Box */
 div[data-baseweb="select"] > div{
 background:#ffffff !important;
-color:#000000 !important;
+color:#111111 !important;
 border-radius:10px;
-border:2px solid #555;
+border:2px solid #c9d7ff;
 }
 
 div[data-baseweb="select"] span{
-color:#000000 !important;
+color:#111111 !important;
 font-weight:700 !important;
 }
 
-/* Metrics cards */
+/* Metric Cards */
 div[data-testid="metric-container"]{
-background:#151515;
-border:1px solid #333;
+background:#ffffff;
+border:1px solid #d8e2ff;
 border-radius:14px;
 padding:16px;
+box-shadow:0 4px 12px rgba(0,0,0,0.06);
 }
 
 /* Buttons */
 .stButton>button{
-background:#ffffff;
-color:#000000;
+background:#2d6cff;
+color:white;
 font-weight:700;
 border-radius:8px;
+border:none;
 }
 
 </style>
@@ -94,7 +96,7 @@ subject_map = {
 }
 
 # ==========================================================
-# REAL REPORT BASED GPS DATA (3 CONDITIONS)
+# REAL REPORT GPS DATA
 # ==========================================================
 gps_data = {
 "Subject 1":{"Control":6.2,"Reverse":12.0,"Phone Reverse":12.8},
@@ -115,20 +117,20 @@ gps_data = {
 }
 
 # ==========================================================
-# CHART STYLE
+# COLORFUL CHART STYLE
 # ==========================================================
 def style(fig):
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="#111111",
-        font_color="white",
+        plot_bgcolor="#ffffff",
+        font_color="#111111",
         xaxis=dict(
-            color="white",
-            gridcolor="rgba(255,255,255,0.10)"
+            color="#111111",
+            gridcolor="rgba(0,0,0,0.08)"
         ),
         yaxis=dict(
-            color="white",
-            gridcolor="rgba(255,255,255,0.10)"
+            color="#111111",
+            gridcolor="rgba(0,0,0,0.08)"
         )
     )
     return fig
@@ -155,7 +157,7 @@ page = st.sidebar.radio(
 )
 
 # ==========================================================
-# PAGE 1 HOME
+# HOME
 # ==========================================================
 if page == "🏠 Home":
 
@@ -166,7 +168,7 @@ if page == "🏠 Home":
     c1.metric("Subjects",15)
     c2.metric("Conditions",3)
     c3.metric("Reports",15)
-    c4.metric("Metrics",len(numeric_cols))
+    c4.metric("CSV Metrics",len(numeric_cols))
 
     st.markdown("---")
 
@@ -176,12 +178,12 @@ if page == "🏠 Home":
 - Real Comparison Analysis  
 - Live Monitoring  
 - AI Clinical Reports  
-- Downloadable Reports  
-- Fall Risk Detection  
+- Subject Download Reports  
+- Fall Risk Prediction  
 """)
 
 # ==========================================================
-# PAGE 2 COMPARISON ANALYSIS
+# COMPARISON
 # ==========================================================
 elif page == "📊 Comparison Analysis":
 
@@ -194,24 +196,172 @@ elif page == "📊 Comparison Analysis":
 
     vals = gps_data[selected]
 
-    graph_df = pd.DataFrame({
+    compare_df = pd.DataFrame({
         "Condition":["Control","Reverse","Phone Reverse"],
         "GPS":[vals["Control"],vals["Reverse"],vals["Phone Reverse"]]
     })
 
-    # -------------------------------------------
-    # TOP INSIGHT
-    # -------------------------------------------
-    deterioration = round(
-        ((vals["Phone Reverse"] - vals["Control"]) /
-         vals["Control"]) * 100,2
+    c1,c2 = st.columns(2)
+
+    with c1:
+        fig1 = px.bar(
+            compare_df,
+            x="Condition",
+            y="GPS",
+            color="Condition",
+            title="Condition Comparison"
+        )
+        st.plotly_chart(style(fig1), use_container_width=True)
+
+    with c2:
+        fig2 = px.line(
+            compare_df,
+            x="Condition",
+            y="GPS",
+            markers=True,
+            title="Trend Analysis"
+        )
+        fig2.update_traces(
+            line=dict(width=4),
+            marker=dict(size=10)
+        )
+        st.plotly_chart(style(fig2), use_container_width=True)
+
+    fig3 = go.Figure()
+
+    fig3.add_trace(go.Scatterpolar(
+        r=list(compare_df["GPS"]),
+        theta=list(compare_df["Condition"]),
+        fill='toself'
+    ))
+
+    fig3.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        font_color="#111111"
     )
 
-    st.info(
-        f"Performance deviation increased by {deterioration}% from Control to Dual-task Reverse Walking."
+    st.plotly_chart(fig3, use_container_width=True)
+
+# ==========================================================
+# LIVE MONITORING
+# ==========================================================
+elif page == "📡 Live Monitoring":
+
+    st.header("Live Monitoring")
+
+    selected_real = st.selectbox(
+        "Select Subject",
+        subjects,
+        format_func=lambda x: subject_map[x]
     )
 
-    # -------------------------------------------
-    # GRAPH 1 BAR
-    # -------------------------------------------
-    c
+    metric = st.selectbox(
+        "Select Metric",
+        numeric_cols
+    )
+
+    st.info(f"X-axis = Time | Y-axis = {metric}")
+
+    temp = df[df[subject_col] == selected_real]
+    base = float(temp[metric].mean())
+
+    chart = st.line_chart(
+        pd.DataFrame({metric:[base]})
+    )
+
+    for i in range(25):
+        val = base + np.random.randn()*0.4
+        chart.add_rows(pd.DataFrame({metric:[val]}))
+        time.sleep(0.2)
+
+# ==========================================================
+# AI REPORT
+# ==========================================================
+elif page == "📄 AI Report":
+
+    st.header("Advanced AI Clinical Report")
+
+    selected = st.selectbox(
+        "Select Subject",
+        list(gps_data.keys())
+    )
+
+    vals = gps_data[selected]
+
+    control = vals["Control"]
+    reverse = vals["Reverse"]
+    phone = vals["Phone Reverse"]
+
+    clinical_score = round(max(0,100-((control+reverse+phone)/3)*6),2)
+    balance_score = round(max(0,100-phone*5),2)
+    stability_score = round(max(0,100-reverse*5),2)
+    fall_risk = round(((phone+reverse)/30)*100,2)
+
+    if fall_risk < 40:
+        risk = "Low Risk"
+    elif fall_risk < 70:
+        risk = "Moderate Risk"
+    else:
+        risk = "High Risk"
+
+    c1,c2,c3,c4 = st.columns(4)
+
+    c1.metric("Clinical Score",clinical_score)
+    c2.metric("Balance Score",balance_score)
+    c3.metric("Stability Score",stability_score)
+    c4.metric("Fall Risk %",fall_risk)
+
+    st.write(f"### Risk Level: {risk}")
+
+    report_df = pd.DataFrame({
+        "Condition":["Control","Reverse","Phone Reverse"],
+        "GPS":[control,reverse,phone]
+    })
+
+    fig4 = px.bar(
+        report_df,
+        x="Condition",
+        y="GPS",
+        color="Condition",
+        title="Condition Report Graph"
+    )
+
+    st.plotly_chart(style(fig4), use_container_width=True)
+
+    report = f"""
+AI REPORT
+
+Subject: {selected}
+
+Control GPS: {control}
+Reverse GPS: {reverse}
+Phone Reverse GPS: {phone}
+
+Clinical Score: {clinical_score}
+Balance Score: {balance_score}
+Stability Score: {stability_score}
+Fall Risk: {fall_risk}
+
+Risk Level: {risk}
+"""
+
+    st.download_button(
+        "Download AI Report",
+        data=report,
+        file_name=f"{selected}_AI_Report.txt",
+        mime="text/plain"
+    )
+
+# ==========================================================
+# DOWNLOAD CENTER
+# ==========================================================
+elif page == "📁 Download Center":
+
+    st.header("Download Center")
+
+    st.download_button(
+        "Download Summary",
+        data="Dashboard Summary File",
+        file_name="dashboard_summary.txt",
+        mime="text/plain"
+    )
