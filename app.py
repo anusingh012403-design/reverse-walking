@@ -10,8 +10,30 @@ import time
 # =====================================================
 st.set_page_config(
     page_title="Clinical Reverse Walking Dashboard",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
+
+# =====================================================
+# CUSTOM CSS
+# =====================================================
+st.markdown("""
+<style>
+.main {
+    background-color: #f8fafc;
+}
+div[data-testid="metric-container"] {
+    background: white;
+    border: 1px solid #e5e7eb;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0px 3px 8px rgba(0,0,0,0.08);
+}
+h1,h2,h3 {
+    color:#0f172a;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # =====================================================
 # LOAD DATA
@@ -29,16 +51,21 @@ df.columns = df.columns.str.strip().str.lower()
 subject_col = "subject" if "subject" in df.columns else df.columns[0]
 
 # =====================================================
-# TITLE
+# NUMERIC COLUMNS
 # =====================================================
-st.title("🩺 Clinical Reverse Walking Gait Dashboard")
-st.markdown("Subject-wise Clinical Monitoring and Reporting System")
+numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
+
+# =====================================================
+# HEADER
+# =====================================================
+st.title("Clinical Reverse Walking Gait Dashboard")
+st.caption("Professional Subject Monitoring and Clinical Analysis System")
 
 # =====================================================
 # SIDEBAR
 # =====================================================
 page = st.sidebar.radio(
-    "Navigation",
+    "Select Module",
     [
         "Home",
         "Comparison Analysis",
@@ -48,13 +75,13 @@ page = st.sidebar.radio(
 )
 
 # =====================================================
-# HOME
+# PAGE 1 HOME
 # =====================================================
 if page == "Home":
 
-    st.header("Clinical Overview")
+    st.header("Dashboard Overview")
 
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3, c4 = st.columns(4)
 
     with c1:
         st.metric("Total Subjects", df[subject_col].nunique())
@@ -63,60 +90,44 @@ if page == "Home":
         st.metric("Total Records", len(df))
 
     with c3:
-        st.metric("Total Features", df.shape[1])
+        st.metric("Features", df.shape[1])
+
+    with c4:
+        st.metric("Conditions", 3)
 
     st.markdown("---")
 
-    st.write("""
-This dashboard evaluates reverse walking gait performance of 15 subjects.
+    left, right = st.columns([2,1])
 
-### Included Modules:
-- Subject Comparison
-- Live Monitoring
-- Subject-wise Clinical Reports
-- Risk Assessment
+    with left:
+        st.subheader("Clinical Objective")
+        st.write("""
+This dashboard evaluates reverse walking gait performance for 15 subjects.
+
+### Used For:
+- Balance analysis
+- Fall risk screening
+- Coordination monitoring
+- Functional mobility testing
+- Subject comparison
 """)
 
+    with right:
+        if numeric_cols:
+            fig, ax = plt.subplots(figsize=(5,3))
+            df[numeric_cols].mean().plot(kind="bar", ax=ax)
+            ax.set_title("Average Metrics")
+            plt.xticks(rotation=45)
+            st.pyplot(fig)
+
+    st.success("System Ready")
+
 # =====================================================
-# COMPARISON
+# PAGE 2 COMPARISON
 # =====================================================
 elif page == "Comparison Analysis":
 
-    st.header("Subject Comparison")
-
-    subjects = sorted(df[subject_col].unique())
-    selected_subject = st.selectbox("Select Subject", subjects)
-
-    temp = df[df[subject_col] == selected_subject]
-
-    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
-
-    if numeric_cols:
-
-        feature = st.selectbox("Select Metric", numeric_cols)
-
-        st.subheader("Bar Chart")
-        st.bar_chart(temp[feature])
-
-        st.subheader("Line Chart")
-        st.line_chart(temp[feature])
-
-        st.subheader("Box Plot")
-        fig1, ax1 = plt.subplots()
-        sns.boxplot(y=temp[feature], ax=ax1)
-        st.pyplot(fig1)
-
-        st.subheader("Histogram")
-        fig2, ax2 = plt.subplots()
-        sns.histplot(temp[feature], kde=True, ax=ax2)
-        st.pyplot(fig2)
-
-# =====================================================
-# LIVE MONITORING
-# =====================================================
-elif page == "Live Monitoring":
-
-    st.header("Subject-wise Live Monitoring")
+    st.header("Subject Comparison Analysis")
 
     subjects = sorted(df[subject_col].unique())
 
@@ -127,39 +138,97 @@ elif page == "Live Monitoring":
 
     temp = df[df[subject_col] == selected_subject]
 
-    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
+    feature = st.selectbox(
+        "Select Metric",
+        numeric_cols
+    )
+
+    c1, c2 = st.columns(2)
+
+    with c1:
+        st.subheader("Bar Comparison")
+        st.bar_chart(temp[feature])
+
+    with c2:
+        st.subheader("Line Trend")
+        st.line_chart(temp[feature])
+
+    c3, c4 = st.columns(2)
+
+    with c3:
+        fig1, ax1 = plt.subplots()
+        sns.boxplot(y=temp[feature], ax=ax1)
+        ax1.set_title("Variation")
+        st.pyplot(fig1)
+
+    with c4:
+        fig2, ax2 = plt.subplots()
+        sns.histplot(temp[feature], kde=True, ax=ax2)
+        ax2.set_title("Distribution")
+        st.pyplot(fig2)
+
+    st.subheader("Subject vs All Subjects Mean")
+
+    mean_all = df.groupby(subject_col)[feature].mean()
+
+    fig3, ax3 = plt.subplots(figsize=(10,4))
+    mean_all.plot(kind="bar", ax=ax3)
+    ax3.axhline(mean_all.mean(), linestyle="--")
+    plt.xticks(rotation=45)
+    st.pyplot(fig3)
+
+# =====================================================
+# PAGE 3 LIVE MONITORING
+# =====================================================
+elif page == "Live Monitoring":
+
+    st.header("Real-Time Subject Monitoring")
+
+    subjects = sorted(df[subject_col].unique())
+
+    selected_subject = st.selectbox(
+        "Select Subject",
+        subjects
+    )
 
     feature = st.selectbox(
         "Select Monitoring Metric",
         numeric_cols
     )
 
-    st.markdown("""
-### Axis Information
+    st.info(f"X-axis = Time (seconds) | Y-axis = {feature}")
 
-**X-axis:** Time (seconds)  
-**Y-axis:** Live Performance Score
-""")
+    temp = df[df[subject_col] == selected_subject]
+
+    baseline = float(temp[feature].mean())
 
     chart = st.line_chart(
-        pd.DataFrame({feature: np.random.randn(10)})
+        pd.DataFrame({feature:[baseline]})
     )
 
-    for i in range(20):
+    status = st.empty()
 
-        base = float(temp[feature].mean())
-        value = base + np.random.randn() * 0.5
+    values = []
+
+    for i in range(25):
+
+        new_val = baseline + np.random.randn()*0.4
+        values.append(new_val)
 
         chart.add_rows(
-            pd.DataFrame({feature: [value]})
+            pd.DataFrame({feature:[new_val]})
         )
 
-        time.sleep(0.25)
+        status.write(
+            f"Time: {i+1} sec | Subject: {selected_subject} | {feature}: {round(new_val,2)}"
+        )
 
-    st.success("Live Monitoring Completed")
+        time.sleep(0.2)
+
+    st.success("Monitoring Session Completed")
 
 # =====================================================
-# CLINICAL REPORT
+# PAGE 4 CLINICAL REPORT
 # =====================================================
 elif page == "Clinical Report":
 
@@ -174,15 +243,12 @@ elif page == "Clinical Report":
 
     temp = df[df[subject_col] == selected_subject]
 
-    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
+    score = round(temp[numeric_cols].mean().mean(),2)
 
-    # ---------------- SUBJECT SCORE ----------------
-    score = round(temp[numeric_cols].mean().mean(), 2)
+    # SUBJECT NUMBER
+    idx = subjects.index(selected_subject)
 
-    # ---------------- SUBJECT UNIQUE VARIATION ----------------
-    subject_num = int(str(selected_subject).split()[-1]) if str(selected_subject).split()[-1].isdigit() else subjects.index(selected_subject)+1
-
-    # ---------------- DIFFERENT RISK ----------------
+    # RISK
     if score >= 75:
         risk = "Low Risk"
     elif score >= 55:
@@ -190,50 +256,46 @@ elif page == "Clinical Report":
     else:
         risk = "High Risk"
 
-    # ---------------- DIFFERENT OBSERVATIONS ----------------
-    observations = [
-        "Good dynamic balance with stable gait response.",
-        "Mild instability during reverse walking.",
-        "Reduced coordination under cognitive load.",
-        "Delayed movement initiation observed.",
-        "Symmetrical gait pattern maintained.",
-        "Shortened step pattern detected.",
-        "Moderate trunk sway observed.",
-        "Improved balance recovery response.",
-        "Variable cadence pattern noticed.",
-        "Stable postural alignment maintained.",
-        "Minor hesitation during turning phase.",
-        "Lower limb control satisfactory.",
-        "Mild fatigue pattern observed.",
-        "Strong mobility control noted.",
-        "Reduced confidence during backward motion."
+    findings = [
+        "Stable gait mechanics observed.",
+        "Minor balance fluctuation present.",
+        "Reduced reverse walking confidence.",
+        "Mild coordination delay detected.",
+        "Efficient movement control noted.",
+        "Shortened stride tendency present.",
+        "Moderate gait inconsistency found.",
+        "Good recovery response observed.",
+        "Variable cadence pattern present.",
+        "Postural control maintained.",
+        "Hesitation during task transition.",
+        "Lower limb response satisfactory.",
+        "Fatigue tendency observed.",
+        "Strong mobility pattern noted.",
+        "Backward stepping caution required."
     ]
 
-    recommendation_list = [
-        "Continue routine activity and monthly review.",
-        "Start balance exercises 3 times/week.",
-        "Perform supervised reverse walking drills.",
-        "Coordination training recommended.",
-        "No major intervention needed presently.",
-        "Lower limb strengthening advised.",
-        "Use posture correction exercises.",
-        "Weekly mobility reassessment advised.",
-        "Dual-task walking practice recommended.",
-        "Maintain present rehabilitation plan.",
-        "Monitor gait confidence regularly.",
-        "Increase endurance training gradually.",
-        "Functional movement retraining suggested.",
-        "Preventive exercise program advised.",
-        "Close follow-up and safety monitoring required."
+    recs = [
+        "Routine monitoring recommended.",
+        "Weekly balance drills advised.",
+        "Dual-task training suggested.",
+        "Coordination exercises recommended.",
+        "Maintain present activity level.",
+        "Stride improvement exercises advised.",
+        "Periodic physiotherapy suggested.",
+        "Continue supervised mobility work.",
+        "Cadence control practice advised.",
+        "Maintain rehabilitation schedule.",
+        "Confidence retraining recommended.",
+        "Strength maintenance advised.",
+        "Endurance program suggested.",
+        "Continue functional exercises.",
+        "Close safety monitoring advised."
     ]
 
-    observation = observations[(subject_num - 1) % 15]
-    recommendation = recommendation_list[(subject_num - 1) % 15]
+    finding = findings[idx]
+    rec = recs[idx]
 
-    # ---------------- REPORT DISPLAY ----------------
-    st.subheader(f"Clinical Report : Subject {selected_subject}")
-
-    c1, c2 = st.columns(2)
+    c1, c2, c3 = st.columns(3)
 
     with c1:
         st.metric("Clinical Score", score)
@@ -241,54 +303,44 @@ elif page == "Clinical Report":
     with c2:
         st.metric("Risk Level", risk)
 
+    with c3:
+        st.metric("Subject Rank", idx+1)
+
     st.markdown("---")
 
-    st.write(f"""
-### Clinical Findings:
-- {observation}
-- Reverse walking performance analyzed.
-- Functional gait response recorded.
-- Subject-specific movement variation detected.
-""")
+    st.subheader("Clinical Findings")
+    st.write(finding)
 
-    # ---------------- GRAPH ----------------
     st.subheader("Performance Summary")
 
     avg_vals = temp[numeric_cols].mean()
 
-    fig3, ax3 = plt.subplots(figsize=(9,4))
-    ax3.bar(avg_vals.index, avg_vals.values)
-    ax3.set_xlabel("Metrics")
-    ax3.set_ylabel("Average Value")
-    ax3.set_title("Subject Performance Metrics")
+    fig4, ax4 = plt.subplots(figsize=(10,4))
+    avg_vals.plot(kind="bar", ax=ax4)
+    ax4.set_ylabel("Average Value")
     plt.xticks(rotation=45)
-    st.pyplot(fig3)
+    st.pyplot(fig4)
 
-    # ---------------- RECOMMENDATION ----------------
-    st.subheader("Clinical Recommendation")
+    st.subheader("Recommendation")
+    st.success(rec)
 
-    st.success(recommendation)
-
-    # ---------------- DOWNLOAD REPORT ----------------
-    report_text = f"""
+    report = f"""
 CLINICAL REPORT
 
 Subject: {selected_subject}
-
 Clinical Score: {score}
 Risk Level: {risk}
 
-Findings:
-{observation}
-Reverse walking assessed successfully.
+Finding:
+{finding}
 
 Recommendation:
-{recommendation}
+{rec}
 """
 
     st.download_button(
-        "Download Full Clinical Report",
-        data=report_text,
-        file_name=f"{selected_subject}_clinical_report.txt",
+        "Download Report",
+        data=report,
+        file_name=f"{selected_subject}_report.txt",
         mime="text/plain"
     )
