@@ -20,28 +20,23 @@ st.set_page_config(
 st.markdown("""
 <style>
 
-/* Main */
 [data-testid="stAppViewContainer"]{
 background:linear-gradient(135deg,#ffffff,#f7f9fc,#eef3ff);
 color:#111111;
 }
 
-/* Sidebar */
 [data-testid="stSidebar"]{
 background:linear-gradient(180deg,#f1f5ff,#dfe9ff);
 }
 
-/* Header */
 [data-testid="stHeader"]{
 background:rgba(255,255,255,0);
 }
 
-/* Text */
 h1,h2,h3,h4,h5,h6,p,label,span,div{
 color:#111111 !important;
 }
 
-/* Select Box */
 div[data-baseweb="select"] > div{
 background:#ffffff !important;
 color:#111111 !important;
@@ -54,7 +49,6 @@ color:#111111 !important;
 font-weight:700 !important;
 }
 
-/* Metric Cards */
 div[data-testid="metric-container"]{
 background:#ffffff;
 border:1px solid #d8e2ff;
@@ -63,7 +57,6 @@ padding:16px;
 box-shadow:0 4px 12px rgba(0,0,0,0.06);
 }
 
-/* Buttons */
 .stButton>button{
 background:#2d6cff;
 color:white;
@@ -76,7 +69,7 @@ border:none;
 """, unsafe_allow_html=True)
 
 # ==========================================================
-# LOAD CSV
+# LOAD DATA
 # ==========================================================
 @st.cache_data
 def load_data():
@@ -96,7 +89,7 @@ subject_map = {
 }
 
 # ==========================================================
-# REAL REPORT GPS DATA
+# GPS DATA
 # ==========================================================
 gps_data = {
 "Subject 1":{"Control":6.2,"Reverse":12.0,"Phone Reverse":12.8},
@@ -117,7 +110,7 @@ gps_data = {
 }
 
 # ==========================================================
-# COLORFUL CHART STYLE
+# CHART STYLE
 # ==========================================================
 def style(fig):
     fig.update_layout(
@@ -149,7 +142,7 @@ page = st.sidebar.radio(
     "Navigation",
     [
         "🏠 Home",
-        "📊 Comparison Analysis",
+        "📊 Advanced Comparison Analysis",
         "📡 Live Monitoring",
         "📄 AI Report",
         "📁 Download Center"
@@ -170,22 +163,10 @@ if page == "🏠 Home":
     c3.metric("Reports",15)
     c4.metric("CSV Metrics",len(numeric_cols))
 
-    st.markdown("---")
-
-    st.write("""
-### Modules Included
-
-- Real Comparison Analysis  
-- Live Monitoring  
-- AI Clinical Reports  
-- Subject Download Reports  
-- Fall Risk Prediction  
-""")
-
 # ==========================================================
-# COMPARISON
+# COMPARISON PAGE
 # ==========================================================
-elif page == "📊 Comparison Analysis":
+elif page == "📊 Advanced Comparison Analysis":
 
     st.header("Advanced Comparison Analysis")
 
@@ -203,16 +184,27 @@ elif page == "📊 Comparison Analysis":
 
     c1,c2 = st.columns(2)
 
+    # ------------------------------------------------------
+    # GRAPH 1 BAR CHART
+    # ------------------------------------------------------
     with c1:
         fig1 = px.bar(
             compare_df,
             x="Condition",
             y="GPS",
             color="Condition",
-            title="Condition Comparison"
+            title="GPS vs Condition Comparison"
         )
         st.plotly_chart(style(fig1), use_container_width=True)
 
+        st.info("""
+**Interpretation:** Lower GPS indicates better gait performance.  
+Higher GPS in Reverse / Phone Reverse suggests increased movement difficulty and deviation.
+""")
+
+    # ------------------------------------------------------
+    # GRAPH 2 LINE TREND
+    # ------------------------------------------------------
     with c2:
         fig2 = px.line(
             compare_df,
@@ -227,6 +219,14 @@ elif page == "📊 Comparison Analysis":
         )
         st.plotly_chart(style(fig2), use_container_width=True)
 
+        st.info("""
+**Interpretation:** Rising trend indicates gait performance decreases across challenging conditions.  
+Phone Reverse usually shows highest task demand.
+""")
+
+    # ------------------------------------------------------
+    # GRAPH 3 RADAR
+    # ------------------------------------------------------
     fig3 = go.Figure()
 
     fig3.add_trace(go.Scatterpolar(
@@ -241,6 +241,11 @@ elif page == "📊 Comparison Analysis":
     )
 
     st.plotly_chart(fig3, use_container_width=True)
+
+    st.info("""
+**Interpretation:** Wider radar spread indicates higher gait deviation.  
+Smaller balanced shape indicates more stable walking mechanics.
+""")
 
 # ==========================================================
 # LIVE MONITORING
@@ -265,11 +270,9 @@ elif page == "📡 Live Monitoring":
     temp = df[df[subject_col] == selected_real]
     base = float(temp[metric].mean())
 
-    chart = st.line_chart(
-        pd.DataFrame({metric:[base]})
-    )
+    chart = st.line_chart(pd.DataFrame({metric:[base]}))
 
-    for i in range(25):
+    for i in range(20):
         val = base + np.random.randn()*0.4
         chart.add_rows(pd.DataFrame({metric:[val]}))
         time.sleep(0.2)
@@ -279,7 +282,7 @@ elif page == "📡 Live Monitoring":
 # ==========================================================
 elif page == "📄 AI Report":
 
-    st.header("Advanced AI Clinical Report")
+    st.header("AI Clinical Report")
 
     selected = st.selectbox(
         "Select Subject",
@@ -292,65 +295,17 @@ elif page == "📄 AI Report":
     reverse = vals["Reverse"]
     phone = vals["Phone Reverse"]
 
-    clinical_score = round(max(0,100-((control+reverse+phone)/3)*6),2)
-    balance_score = round(max(0,100-phone*5),2)
-    stability_score = round(max(0,100-reverse*5),2)
-    fall_risk = round(((phone+reverse)/30)*100,2)
-
-    if fall_risk < 40:
-        risk = "Low Risk"
-    elif fall_risk < 70:
-        risk = "Moderate Risk"
-    else:
-        risk = "High Risk"
+    clinical = round(max(0,100-((control+reverse+phone)/3)*6),2)
+    balance = round(max(0,100-phone*5),2)
+    stability = round(max(0,100-reverse*5),2)
+    risk = round(((phone+reverse)/30)*100,2)
 
     c1,c2,c3,c4 = st.columns(4)
 
-    c1.metric("Clinical Score",clinical_score)
-    c2.metric("Balance Score",balance_score)
-    c3.metric("Stability Score",stability_score)
-    c4.metric("Fall Risk %",fall_risk)
-
-    st.write(f"### Risk Level: {risk}")
-
-    report_df = pd.DataFrame({
-        "Condition":["Control","Reverse","Phone Reverse"],
-        "GPS":[control,reverse,phone]
-    })
-
-    fig4 = px.bar(
-        report_df,
-        x="Condition",
-        y="GPS",
-        color="Condition",
-        title="Condition Report Graph"
-    )
-
-    st.plotly_chart(style(fig4), use_container_width=True)
-
-    report = f"""
-AI REPORT
-
-Subject: {selected}
-
-Control GPS: {control}
-Reverse GPS: {reverse}
-Phone Reverse GPS: {phone}
-
-Clinical Score: {clinical_score}
-Balance Score: {balance_score}
-Stability Score: {stability_score}
-Fall Risk: {fall_risk}
-
-Risk Level: {risk}
-"""
-
-    st.download_button(
-        "Download AI Report",
-        data=report,
-        file_name=f"{selected}_AI_Report.txt",
-        mime="text/plain"
-    )
+    c1.metric("Clinical Score",clinical)
+    c2.metric("Balance Score",balance)
+    c3.metric("Stability Score",stability)
+    c4.metric("Fall Risk %",risk)
 
 # ==========================================================
 # DOWNLOAD CENTER
@@ -361,7 +316,6 @@ elif page == "📁 Download Center":
 
     st.download_button(
         "Download Summary",
-        data="Dashboard Summary File",
-        file_name="dashboard_summary.txt",
-        mime="text/plain"
+        data="Dashboard Summary",
+        file_name="summary.txt"
     )
