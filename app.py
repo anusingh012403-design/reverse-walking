@@ -69,7 +69,7 @@ border:none;
 """, unsafe_allow_html=True)
 
 # ==========================================================
-# LOAD DATA
+# LOAD CSV
 # ==========================================================
 @st.cache_data
 def load_data():
@@ -144,13 +144,12 @@ page = st.sidebar.radio(
         "🏠 Home",
         "📊 Advanced Comparison Analysis",
         "📡 Live Monitoring",
-        "📄 AI Report",
-        "📁 Download Center"
+        "📄 AI Report"
     ]
 )
 
 # ==========================================================
-# HOME
+# HOME PAGE
 # ==========================================================
 if page == "🏠 Home":
 
@@ -161,7 +160,25 @@ if page == "🏠 Home":
     c1.metric("Subjects",15)
     c2.metric("Conditions",3)
     c3.metric("Reports",15)
-    c4.metric("CSV Metrics",len(numeric_cols))
+    c4.metric("Metrics",len(numeric_cols))
+
+    st.markdown("---")
+
+    st.subheader("Project Modules")
+
+    st.write("""
+### Included Modules:
+
+- Home Dashboard Overview  
+- Advanced Comparison Analysis  
+- Live Subject Monitoring  
+- AI Clinical Report Generation  
+- Fall Risk Prediction  
+- Balance & Stability Analysis  
+- Downloadable Subject Reports  
+""")
+
+    st.success("System Ready")
 
 # ==========================================================
 # COMPARISON PAGE
@@ -184,9 +201,6 @@ elif page == "📊 Advanced Comparison Analysis":
 
     c1,c2 = st.columns(2)
 
-    # ------------------------------------------------------
-    # GRAPH 1 BAR CHART
-    # ------------------------------------------------------
     with c1:
         fig1 = px.bar(
             compare_df,
@@ -198,13 +212,10 @@ elif page == "📊 Advanced Comparison Analysis":
         st.plotly_chart(style(fig1), use_container_width=True)
 
         st.info("""
-**Interpretation:** Lower GPS indicates better gait performance.  
-Higher GPS in Reverse / Phone Reverse suggests increased movement difficulty and deviation.
+Lower GPS score indicates better gait mechanics.
+Higher score in challenging conditions suggests increased movement deviation.
 """)
 
-    # ------------------------------------------------------
-    # GRAPH 2 LINE TREND
-    # ------------------------------------------------------
     with c2:
         fig2 = px.line(
             compare_df,
@@ -220,13 +231,10 @@ Higher GPS in Reverse / Phone Reverse suggests increased movement difficulty and
         st.plotly_chart(style(fig2), use_container_width=True)
 
         st.info("""
-**Interpretation:** Rising trend indicates gait performance decreases across challenging conditions.  
-Phone Reverse usually shows highest task demand.
+Increasing trend shows gait difficulty rising across task complexity.
+Phone Reverse generally shows highest challenge.
 """)
 
-    # ------------------------------------------------------
-    # GRAPH 3 RADAR
-    # ------------------------------------------------------
     fig3 = go.Figure()
 
     fig3.add_trace(go.Scatterpolar(
@@ -243,8 +251,8 @@ Phone Reverse usually shows highest task demand.
     st.plotly_chart(fig3, use_container_width=True)
 
     st.info("""
-**Interpretation:** Wider radar spread indicates higher gait deviation.  
-Smaller balanced shape indicates more stable walking mechanics.
+Wider radar area reflects greater gait deviation.
+Compact balanced shape indicates stable performance.
 """)
 
 # ==========================================================
@@ -307,15 +315,10 @@ elif page == "📄 AI Report":
     c3.metric("Stability Score",stability)
     c4.metric("Fall Risk %",risk)
 
-# ==========================================================
-# DOWNLOAD CENTER
-# ==========================================================
-elif page == "📁 Download Center":
-
-    st.header("Download Center")
-
-    st.download_button(
-        "Download Summary",
-        data="Dashboard Summary",
-        file_name="summary.txt"
+    fig = px.bar(
+        x=["Clinical","Balance","Stability","Risk"],
+        y=[clinical,balance,stability,risk],
+        color=["Clinical","Balance","Stability","Risk"]
     )
+
+    st.plotly_chart(style(fig), use_container_width=True)
