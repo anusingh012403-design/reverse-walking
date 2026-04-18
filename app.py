@@ -92,7 +92,7 @@ st.caption("Team Members: Anushka Singh | Astha Singh | Kritika Vashishtha")
 page = st.sidebar.radio(
     "Navigation",
     [
-        "🏠 Home",
+        "🏠 Home py",
         "📊 Advanced Comparison Analysis",
         "📡 Live Monitoring",
         "📄 AI Report"
